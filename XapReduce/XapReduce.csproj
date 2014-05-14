@@ -85,6 +85,7 @@
     <EmbeddedResource Include="Res\Output.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Output.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Res\Res.resx">
       <Generator>ResXFileCodeGenerator</Generator>

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Xml.Linq;
 using MVeldhuizen.XapReduce.IO;
 
@@ -12,7 +11,7 @@ namespace MVeldhuizen.XapReduce.XapHandling
     {
         private static readonly XNamespace DeploymentNamespace = "http://schemas.microsoft.com/client/2007/deployment";
         protected static readonly XNamespace XamlNamespace = "http://schemas.microsoft.com/winfx/2006/xaml";
-        private List<AssemblyPartInfo> _assemblyParts = new List<AssemblyPartInfo>();
+        private readonly List<AssemblyPartInfo> _assemblyParts = new List<AssemblyPartInfo>();
 
         protected XapFile(string xapPath, ZipArchive archive)
         {
@@ -31,38 +30,33 @@ namespace MVeldhuizen.XapReduce.XapHandling
         }
 
         public string InputPath { get; private set; }
-    
+
         public IList<AssemblyPartInfo> AssemblyParts
         {
-            get
-            {
-                return _assemblyParts.AsReadOnly();
-            }
+            get { return _assemblyParts.AsReadOnly(); }
         }
-
-        //public long GetAssemblyPartSize(string assemblyPart)
-        //{
-        //    XElement element = AssemblyPartsElements.
-        //        Where(el => el.Attribute(XamlNamespace + "Name") != null).
-        //        Single(el => el.Attribute(XamlNamespace + "Name").Value == assemblyPart);
-
-        //    string fileName = element.Attribute("Source").Value;
-
-        //    return InputArchive.GetEntry(fileName).Length;
-        //}
 
         protected IEnumerable<XElement> AssemblyPartsElements
         {
             get
             {
-                return AppManifest.
-                    Element(DeploymentNamespace + "Deployment").
-                    Element(DeploymentNamespace + "Deployment.Parts").
-                    Elements();                
+                XElement deploymentEl = AppManifest.Element(DeploymentNamespace + "Deployment");
+                if (deploymentEl == null)
+                {
+                    throw new InvalidDataException("The AppManifest.xaml does not contain a Deployment element.");
+                }
+
+                XElement deploymentPartsEl = deploymentEl.Element(DeploymentNamespace + "Deployment.Parts");
+                if (deploymentPartsEl == null)
+                {
+                    throw new InvalidDataException("The AppManifest.xaml does not contain a Deployment.Parts element.");
+                }
+
+                return deploymentPartsEl.Elements();
             }
         }
 
-        protected XDocument AppManifest { get; set; }
+        protected XDocument AppManifest { get; private set; }
 
         protected ZipArchive InputArchive { get; set; }
 
@@ -74,14 +68,20 @@ namespace MVeldhuizen.XapReduce.XapHandling
                 AppManifest = XDocument.Load(stream);
             }
 
-            foreach (var e in AssemblyPartsElements.Where(e => e.Attribute(XamlNamespace + "Name") != null))
+            foreach (var e in AssemblyPartsElements)
             {
-                string name = e.Attribute(XamlNamespace + "Name").Value;
+                var nameAttribute = e.Attribute(XamlNamespace + "Name");
+                string name = nameAttribute != null ? nameAttribute.Value : null;
                 string source = e.Attribute("Source").Value;
-                long size = xap.GetEntry(source).Length;
+                long size = xap.GetEntry(ManifestSourceToEntryName(source)).Length;
 
                 _assemblyParts.Add(new AssemblyPartInfo(name, source, size));
             }
+        }
+
+        protected static string ManifestSourceToEntryName(string manifestSource)
+        {
+            return manifestSource.Replace('/', '\\');
         }
     }
 }

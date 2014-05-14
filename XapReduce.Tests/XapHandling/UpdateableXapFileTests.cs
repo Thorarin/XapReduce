@@ -1,14 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using System.IO.Compression;
-using System.Linq;
-using System.Runtime.Serialization.Formatters;
-using System.Text;
-using System.Threading.Tasks;
 using MVeldhuizen.XapReduce.IO;
 using MVeldhuizen.XapReduce.Tests.Harness;
-using MVeldhuizen.XapReduce.XapHandling;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NSubstitute;
 
@@ -23,9 +16,9 @@ namespace MVeldhuizen.XapReduce.XapHandling.Tests
         {
             var fileSystem = Substitute.For<IFileSystem>();
 
-            var builder = new XapBuilder(CompressionLevel.NoCompression);
-            builder.AddAssemblyPart("A", "A.dll", 10000);
-            builder.AddAssemblyPart("B", "B.dll", 10000);
+            var builder = new XapBuilder(CompressionLevel.NoCompression).
+                AddAssemblyPart("A", 10000).
+                AddAssemblyPart("B", 10000);
             builder.Build();
 
             fileSystem.FileExists("Input.xap").Returns(true);

@@ -5,7 +5,6 @@ using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MVeldhuizen.XapReduce.IO;
 using MVeldhuizen.XapReduce.Tests.Harness;
-using MVeldhuizen.XapReduce.XapHandling;
 using NSubstitute;
 
 namespace MVeldhuizen.XapReduce.Tests
@@ -31,8 +30,12 @@ namespace MVeldhuizen.XapReduce.Tests
             var fileSystem = Substitute.For<IFileSystem>();
             var console = new StringWriter();
 
-            var inputBuilder = CreateFakeInputXap(fileSystem, ZipArchiveMode.Update, "A", "B");
-            var sourceBuilder = CreateFakeSourceXap(fileSystem, "A", "C");
+            var inputBuilder = CreateFakeInputXap(fileSystem, ZipArchiveMode.Update, "A", "B").
+                AddResourceAssemblyPart("en", "A").
+                AddResourceAssemblyPart("en-US", "A").
+                AddResourceAssemblyPart("en", "B");
+                
+            CreateFakeSourceXap(fileSystem, "A", "C");
 
             var options = new Options()
             {
@@ -41,14 +44,15 @@ namespace MVeldhuizen.XapReduce.Tests
             };
 
             var builder = new XapBuilder();
-            builder.AddAssemblyPart("A", "A.dll", 1000);
+            builder.AddAssemblyPart("A", 1000);
 
             var minifier = new XapMinifier(fileSystem, console);
             minifier.ReduceXap(options);
 
             var output = inputBuilder.GetArchive();
-            Assert.AreEqual(2, output.Entries.Count);
+            Assert.AreEqual(3, output.Entries.Count);
             Assert.IsNotNull(output.GetEntry("B.dll"));
+            Assert.IsNotNull(output.GetEntry("en\\B.resources.dll"));
         }
 
 
@@ -59,7 +63,7 @@ namespace MVeldhuizen.XapReduce.Tests
             var console = new StringWriter();
 
             var inputBuilder = CreateFakeInputXap(fileSystem, ZipArchiveMode.Update, "A", "B");
-            var sourceBuilder = CreateFakeSourceXap(fileSystem, "A", "C");
+            CreateFakeSourceXap(fileSystem, "A", "C");
 
             var options = new Options()
             {
@@ -69,7 +73,7 @@ namespace MVeldhuizen.XapReduce.Tests
             };
 
             var builder = new XapBuilder();
-            builder.AddAssemblyPart("A", "A.dll", 1000);
+            builder.AddAssemblyPart("A", 1000);
 
             var minifier = new XapMinifier(fileSystem, console);
             minifier.ReduceXap(options);
@@ -88,10 +92,9 @@ namespace MVeldhuizen.XapReduce.Tests
             var consoleOutput = new StringWriter(consoleBuilder);
 
             var inputBuilder = CreateFakeInputXap(fileSystem, ZipArchiveMode.Update, CompressionLevel.NoCompression, "A", "B");
-            var sourceBuilder = CreateFakeSourceXap(fileSystem, "A", "C");
+            CreateFakeSourceXap(fileSystem, "A", "C");
 
             fileSystem.FileSize("Input.xap").Returns(s => inputBuilder.GetSize());
-
 
             var options = new Options()
             {
@@ -101,7 +104,7 @@ namespace MVeldhuizen.XapReduce.Tests
             };
 
             var builder = new XapBuilder();
-            builder.AddAssemblyPart("A", "A.dll", 1000);
+            builder.AddAssemblyPart("A", 1000);
 
             var minifier = new XapMinifier(fileSystem, consoleOutput);
             minifier.ReduceXap(options);
@@ -118,8 +121,12 @@ namespace MVeldhuizen.XapReduce.Tests
             var fileSystem = Substitute.For<IFileSystem>();
             var console = new StringWriter();
 
-            var inputBuilder = CreateFakeInputXap(fileSystem, ZipArchiveMode.Read, "A", "B");
-            var sourceBuilder = CreateFakeSourceXap(fileSystem, "A", "C");
+            CreateFakeInputXap(fileSystem, ZipArchiveMode.Read, "A", "B").
+                AddResourceAssemblyPart("en", "A").
+                AddResourceAssemblyPart("en-US", "A").
+                AddResourceAssemblyPart("en", "B");
+
+            CreateFakeSourceXap(fileSystem, "A", "C");
 
             MemoryStream outputStream = new MemoryStream();
             fileSystem.FileExists("Output.xap").Returns(true);
@@ -133,14 +140,15 @@ namespace MVeldhuizen.XapReduce.Tests
             };
 
             var builder = new XapBuilder();
-            builder.AddAssemblyPart("A", "A.dll", 1000);
+            builder.AddAssemblyPart("A", 1000);
 
             var minifier = new XapMinifier(fileSystem, console);
             minifier.ReduceXap(options);
 
             var output = new ZipArchive(outputStream, ZipArchiveMode.Read, true);
-            Assert.AreEqual(2, output.Entries.Count);
+            Assert.AreEqual(3, output.Entries.Count);
             Assert.IsNotNull(output.GetEntry("B.dll"));
+            Assert.IsNotNull(output.GetEntry("en\\B.resources.dll"));
         }
 
         private XapBuilder CreateFakeInputXap(IFileSystem fileSystem, ZipArchiveMode mode, params string[] assemblies)
@@ -154,7 +162,7 @@ namespace MVeldhuizen.XapReduce.Tests
 
             foreach (string assembly in assemblies)
             {
-                builder.AddAssemblyPart(assembly, assembly + ".dll", 10000);
+                builder.AddAssemblyPart(assembly, 10000);
             }
 
             fileSystem.FileExists("Input.xap").Returns(true);
@@ -169,7 +177,7 @@ namespace MVeldhuizen.XapReduce.Tests
 
             foreach (string assembly in assemblies)
             {
-                builder.AddAssemblyPart(assembly, assembly + ".dll", 10000);
+                builder.AddAssemblyPart(assembly, 10000);
             }
 
             fileSystem.FileExists("Source.xap").Returns(true);

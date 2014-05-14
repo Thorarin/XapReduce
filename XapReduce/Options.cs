@@ -44,7 +44,7 @@ namespace MVeldhuizen.XapReduce
         [OptionArray('s', "sources", HelpText = "Source file to check for duplicate assemblies.")]
         public string[] Sources { get; set; }
 
-        [Option('m', "ignore-missing", HelpText = "Source file to check for duplicate assemblies.")]
+        [Option('m', "ignore-missing", HelpText = "Ignores missing source files. Without this option, an error will be returned.")]
         public bool IgnoreMissing { get; set; }
 
         [Option('r', "recompress", HelpText = "Attempts to recompress the XAP file afterwards.")]
@@ -65,7 +65,7 @@ namespace MVeldhuizen.XapReduce
             var help = new HelpText
             {
                 Heading = new HeadingInfo("XapReduce", version),
-                Copyright = new CopyrightInfo(Res.Res.Author, 2013),
+                Copyright = new CopyrightInfo(Res.Res.Author, 2013, 2014),
                 AdditionalNewLineAfterOption = true,
                 AddDashesToOption = true
             };

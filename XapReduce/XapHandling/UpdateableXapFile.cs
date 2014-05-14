@@ -2,6 +2,7 @@
 using System.IO;
 using System.IO.Compression;
 using MVeldhuizen.XapReduce.IO;
+using MVeldhuizen.XapReduce.Util;
 
 namespace MVeldhuizen.XapReduce.XapHandling
 {
@@ -25,7 +26,7 @@ namespace MVeldhuizen.XapReduce.XapHandling
 
         protected override void RemoveFileEntry(string fileName)
         {
-            OutputArchive.GetEntry(fileName).Delete();
+            OutputArchive.GetEntry(ManifestSourceToEntryName(fileName)).Delete();
         }
 
         /// <summary>

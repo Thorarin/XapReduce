@@ -41,7 +41,10 @@ namespace MVeldhuizen.XapReduce
             
             using (xap)
             {
-                IList<AssemblyPartInfo> redundantAssemblyParts = GetRedundantAssemblyParts(options.Sources, xap);
+                // Get a list of redundant assemblies, and their accompanying satellite assemblies
+                List<AssemblyPartInfo> redundantAssemblyParts = GetRedundantAssemblyParts(options.Sources, xap).ToList();
+                var redundantResources = redundantAssemblyParts.SelectMany(ap => GetResourceAssemblyParts(ap, xap)).ToList();
+                redundantAssemblyParts.AddRange(redundantResources);
 
                 _console.WriteLine(Output.RedundantAssemblyParts, redundantAssemblyParts.Count);
                 _console.Write(Environment.NewLine);
@@ -73,6 +76,17 @@ namespace MVeldhuizen.XapReduce
                 ToList();
 
             return redundantAssemblyParts.Distinct().ToList();
+        }
+
+        public List<AssemblyPartInfo> GetResourceAssemblyParts(AssemblyPartInfo assemblyPart, XapFile xap)
+        {
+            if (assemblyPart.AssemblyName == null)
+            {
+                return new List<AssemblyPartInfo>();
+            }
+
+            var resourceFileName = "/" + Path.GetFileNameWithoutExtension(assemblyPart.FileName) + ".resources.dll";
+            return xap.AssemblyParts.Where(ap => ap.FileName.EndsWith(resourceFileName)).ToList();
         }
 
         public void RemoveAssemblyParts(WritableXapFile xap, IEnumerable<AssemblyPartInfo> assemblyParts)

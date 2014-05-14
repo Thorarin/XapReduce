@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MVeldhuizen.XapReduce.XapHandling
 {
@@ -33,6 +28,11 @@ namespace MVeldhuizen.XapReduce.XapHandling
         public long Size
         {
             get { return _size; }
+        }
+
+        public override string ToString()
+        {
+            return FileName;
         }
     }
 }

@@ -33,24 +33,50 @@ namespace MVeldhuizen.XapReduce.Tests.Harness
             _archive = new ZipArchive(_ms, ZipArchiveMode.Create, true);
         }
 
-
-
         private XDocument AppManifest { get; set; }
 
-        public void AddAssemblyPart(string name, string source, int fileSize)
+        public XapBuilder AddAssemblyPart(string name, int fileSize)
         {
             if (_archive == null)
             {
                 throw new InvalidOperationException("XAP is already built.");
             }
 
+            string fileName = name + ".dll";
+
             var element = new XElement(DeploymentNamespace + "AssemblyPart",
                 new XAttribute(XamlNamespace + "Name", name),
-                new XAttribute("Source", source));
+                new XAttribute("Source", fileName));
 
             _parts.Add(element);
 
-            var entry = _archive.CreateEntry(source, _compressionLevel);
+            CreateFileEntry(fileName, fileSize);
+
+            return this;
+        }
+
+        public XapBuilder AddResourceAssemblyPart(string culture, string baseName, int fileSize = 2048)
+        {
+            if (_archive == null)
+            {
+                throw new InvalidOperationException("XAP is already built.");
+            }
+
+            string fileName = baseName + ".resources.dll";
+
+            var element = new XElement(DeploymentNamespace + "AssemblyPart",
+                new XAttribute("Source", culture + "/" + fileName));
+
+            _parts.Add(element);
+
+            CreateFileEntry(culture + @"\" + fileName, fileSize);
+
+            return this;
+        }
+
+        private void CreateFileEntry(string entryName, int fileSize)
+        {
+            var entry = _archive.CreateEntry(entryName, _compressionLevel);
             using (var fileStream = entry.Open())
             {
                 int remaining = fileSize;
@@ -68,7 +94,6 @@ namespace MVeldhuizen.XapReduce.Tests.Harness
                     }
                 }
             }
-
         }
 
         public MemoryStream Build()

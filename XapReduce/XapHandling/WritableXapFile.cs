@@ -45,8 +45,8 @@ namespace MVeldhuizen.XapReduce.XapHandling
         public void RemoveAssemblyPart(AssemblyPartInfo assemblyPart)
         {
             XElement element = AssemblyPartsElements.
-                Where(el => el.Attribute(XamlNamespace + "Name") != null).
-                Single(el => el.Attribute(XamlNamespace + "Name").Value == assemblyPart.AssemblyName);
+                Where(el => el.Attribute("Source") != null).
+                Single(el => el.Attribute("Source").Value == assemblyPart.FileName);
 
             element.Remove();
             RemoveFileEntry(assemblyPart.FileName);

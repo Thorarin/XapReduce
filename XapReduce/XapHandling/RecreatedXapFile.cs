@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.IO.Compression;
 using MVeldhuizen.XapReduce.IO;
 
@@ -31,7 +30,7 @@ namespace MVeldhuizen.XapReduce.XapHandling
 
         protected override void RemoveFileEntry(string fileName)
         {
-            _deletedEntries.Add(fileName);
+            _deletedEntries.Add(ManifestSourceToEntryName(fileName));
         }
 
         /// <summary>
