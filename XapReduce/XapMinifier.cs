@@ -41,11 +41,16 @@ namespace MVeldhuizen.XapReduce
             
             using (xap)
             {
-                // Get a list of redundant assemblies, and their accompanying satellite assemblies
+                // Get a list of redundant assemblies: identical files that exist in both input and source XAPs
                 List<AssemblyPartInfo> redundantAssemblyParts = GetRedundantAssemblyParts(options.Sources, xap).ToList();
-                var redundantResources = redundantAssemblyParts.SelectMany(ap => GetResourceAssemblyParts(ap, xap)).ToList();
-                redundantAssemblyParts.AddRange(redundantResources);
 
+                // Get satellite assemblies (resources) for redundant assemblies                
+                var redundantResources = redundantAssemblyParts.SelectMany(ap => GetResourceAssemblyParts(ap, xap)).ToList();
+                
+                // Merge the two lists. Note that it can contain duplicates when a resource file exists in both
+                // input and source XAPs, while at the same time the main assembly is also redundant.
+                redundantAssemblyParts = redundantAssemblyParts.Union(redundantResources).ToList();
+                
                 _console.WriteLine(Output.RedundantAssemblyParts, redundantAssemblyParts.Count);
                 _console.Write(Environment.NewLine);
 

@@ -43,9 +43,6 @@ namespace MVeldhuizen.XapReduce.Tests
                 Sources = new[] {"Source.xap"}
             };
 
-            var builder = new XapBuilder();
-            builder.AddAssemblyPart("A", 1000);
-
             var minifier = new XapMinifier(fileSystem, console);
             minifier.ReduceXap(options);
 
@@ -55,6 +52,37 @@ namespace MVeldhuizen.XapReduce.Tests
             Assert.IsNotNull(output.GetEntry("en\\B.resources.dll"));
         }
 
+        /// <summary>
+        /// Test case where input and source XAP both contain the same satellite assembly along with
+        /// the main assembly A.dll. Input also contains a B.dll which should not be removed.
+        /// </summary>
+        [TestMethod]
+        public void ReduceXap_UpdateExistingFileWithDuplicateResources_Test()
+        {
+            var fileSystem = Substitute.For<IFileSystem>();
+            var console = new StringWriter();
+
+            var inputBuilder =
+                CreateFakeInputXap(fileSystem, ZipArchiveMode.Update, "A", "B").
+                AddResourceAssemblyPart("en", "A");
+
+            CreateFakeSourceXap(fileSystem, "A", "C").
+                AddResourceAssemblyPart("en", "A");
+
+            var options = new Options()
+            {
+                Input = "Input.xap",
+                Sources = new[] { "Source.xap" }
+            };
+
+            var minifier = new XapMinifier(fileSystem, console);
+            minifier.ReduceXap(options);
+
+            var output = inputBuilder.GetArchive();
+            Assert.AreEqual(2, output.Entries.Count);
+            Assert.IsNotNull(output.GetEntry("AppManifest.xaml"));
+            Assert.IsNotNull(output.GetEntry("B.dll"));
+        }
 
         [TestMethod]
         public void ReduceXap_UpdateExistingFileWithRecompress_RecompressionCanceled()
@@ -181,7 +209,7 @@ namespace MVeldhuizen.XapReduce.Tests
             }
 
             fileSystem.FileExists("Source.xap").Returns(true);
-            fileSystem.OpenArchive("Source.xap", ZipArchiveMode.Read).Returns(new ZipArchive(builder.Build()));
+            fileSystem.OpenArchive("Source.xap", ZipArchiveMode.Read).Returns(a => new ZipArchive(builder.Build()));
 
             return builder;
         }
